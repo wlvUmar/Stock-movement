@@ -18,14 +18,13 @@ Includes ETL pipeline, model training (full + incremental), and FastAPI API.
 ## 🗂️ Project Structure
 
 
-├── model/                  # Model code (LSTM, MHA, Trainer)
-├── dataloader/             # Dataset & DataLoader logic
-├── main.py                 # Training & inference logic
-├── api/                    # FastAPI backend
-├── temp.csv                # Your stock dataset
-├── stock\_model.pth         # Saved model
-└── README.md
-
+<pre> ## 🗂️ Project Structure <code> 
+├── ml/ # Model code (dataloader, model, training) 
+├── dataloader/ # Dataset & DataLoader logic 
+├── api/ # FastAPI backend 
+└── main.py # Training & inference logic 
+</code> 
+</pre>
 
 ---
 
