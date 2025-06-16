@@ -1,4 +1,3 @@
-```markdown
 # 📈 Stock Price Movement Predictor
 
 Predicts whether a stock price will go **up or down** using LSTM + Multi-Head Attention.  
@@ -18,7 +17,6 @@ Includes ETL pipeline, model training (full + incremental), and FastAPI API.
 
 ## 🗂️ Project Structure
 
-```
 
 ├── model/                  # Model code (LSTM, MHA, Trainer)
 ├── dataloader/             # Dataset & DataLoader logic
@@ -28,7 +26,6 @@ Includes ETL pipeline, model training (full + incremental), and FastAPI API.
 ├── stock\_model.pth         # Saved model
 └── README.md
 
-````
 
 ---
 
