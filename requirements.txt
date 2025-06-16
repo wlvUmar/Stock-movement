@@ -1,0 +1,11 @@
+pandas
+asyncpg
+sqlalchemy
+pydantic==2.5.2
+pydantic-settings==2.1.0
+fastapi
+uvicorn
+apscheduler
+aiohttp
+python-holidays
+torch
