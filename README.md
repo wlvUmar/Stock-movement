@@ -93,7 +93,7 @@ uvicorn api.app:app --reload
 ---
 
 ## 📌 Notes
-
+* Model is not trained
 * Model supports 1-minute interval stock data since 2006.
 * Classification task: Binary (UP or DOWN).
 * Can update daily using incremental or recent data training.
