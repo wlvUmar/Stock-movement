@@ -18,11 +18,27 @@ Includes ETL pipeline, model training (full + incremental), and FastAPI API.
 ## 🗂️ Project Structure
 
 
-<pre> ## 🗂️ Project Structure <code> 
-├── ml/ # Model code (dataloader, model, training) 
-├── dataloader/ # Dataset & DataLoader logic 
-├── api/ # FastAPI backend 
-└── main.py # Training & inference logic 
+<pre><code> 
+┌───app/
+│   │   main.py
+│   │   scheduler.py
+│   ├───db/
+│   │      connection.py
+│   │      models.py
+│   │
+│   ├───routers/
+│   │      router.py
+│   │
+│   ├───schemas/
+│   │       stock.py
+│   │
+│   └───utils/
+│           config.py
+│    
+└───ml/
+        dataloader.py
+        model.py
+        training.py
 </code> 
 </pre>
 
