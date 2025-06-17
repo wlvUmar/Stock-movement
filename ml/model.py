@@ -369,7 +369,6 @@ def create_stock_lstm(input_size: int,
 
 # Usage examples
 if __name__ == "__main__":
-    # Create a classification model
     config = ModelConfig(
         input_size=20,
         hidden_size=128,
