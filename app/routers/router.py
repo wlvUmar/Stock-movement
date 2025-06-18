@@ -16,7 +16,6 @@ import shutil
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1")
 
-# Load model at startup
 model_data = None
 if os.path.exists(settings.MODEL_PATH):
     try:
@@ -30,21 +29,19 @@ else:
 @router.get("/predict/{symbol}", response_model=PredictionResponse)
 async def get_prediction(
     symbol: str,
-    days_ahead: Optional[int] = Query(1, description="Number of days to predict ahead", ge=1, le=5)
+    minutes_ahead: Optional[int] = Query(1, description="Number of days to predict ahead", ge=1, le=15)
 ):
     if not model_data:
         raise HTTPException(status_code=503, detail="Model not loaded")
     
-    # Create a temporary directory for our files
     temp_dir = tempfile.mkdtemp()
     temp_file = os.path.join(temp_dir, "temp.csv")
     
     try:
-        # Get historical data for prediction
         async with AsyncSessionLocal() as session:
             query = select(StockData).where(
                 StockData.ticker == symbol
-            ).order_by(StockData.date.desc()).limit(60)  # Get last 60 days for prediction
+            ).order_by(StockData.date.desc()).limit(60)
             
             result = await session.execute(query)
             data = result.scalars().all()
@@ -52,7 +49,6 @@ async def get_prediction(
             if not data:
                 raise HTTPException(status_code=404, detail=f"No historical data found for symbol {symbol}")
             
-            # Convert to DataFrame
             df = pd.DataFrame([{
                 'date': d.date,
                 'open': d.open,
@@ -62,15 +58,11 @@ async def get_prediction(
                 'volume': d.volume
             } for d in data])
             
-            # Save to temp file for prediction
             df.to_csv(temp_file, index=False)
-            
-            # Get prediction
-            prediction = predict_next_day(temp_file, settings.MODEL_PATH)
+            prediction = predict_next_day(temp_file, settings.MODEL_PATH, minutes_ahead=minutes_ahead)
             
             return {
                 "symbol": symbol,
-                "prediction_date": datetime.now().date() + timedelta(days=1),
                 "predicted_movement": "UP" if prediction > 0.5 else "DOWN",
                 "confidence": float(prediction if prediction > 0.5 else 1 - prediction),
                 "model_version": settings.VERSION
@@ -80,7 +72,6 @@ async def get_prediction(
         logger.error(f"Prediction failed: {e}")
         raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
     finally:
-        # Clean up temporary directory
         shutil.rmtree(temp_dir)
 
 @router.get("/model/status")

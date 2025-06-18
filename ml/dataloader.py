@@ -13,7 +13,7 @@ import logging
 @dataclass
 class DatasetConfig:
     window_size: int = 60
-    horizon: int = 1
+    horizon: int = 10
     features: Optional[List[str]] = None
     target_type: str = "classification"  # "classification" or "regression"
     scaling_method: str = "standard"  # "standard", "robust", "minmax", "none"
@@ -98,18 +98,18 @@ class TechnicalIndicators:
         """Add momentum-based indicators"""
         df = df.copy()
         
-        # RSI with proper calculation
+            # RSI with proper calculation
         def calculate_rsi(prices: pd.Series, period: int = 14) -> pd.Series:
-        delta = prices.diff()
-        gain = delta.clip(lower=0)
-        loss = -delta.clip(upper=0)
+            delta = prices.diff()
+            gain = delta.clip(lower=0)
+            loss = -delta.clip(upper=0)
 
-        avg_gain = gain.ewm(alpha=1/period, adjust=False).mean()
-        avg_loss = loss.ewm(alpha=1/period, adjust=False).mean()
+            avg_gain = gain.ewm(alpha=1/period, adjust=False).mean()
+            avg_loss = loss.ewm(alpha=1/period, adjust=False).mean()
 
-        rs = avg_gain / avg_loss
-        rsi = 100 - (100 / (1 + rs))
-        return rsi.fillna(0)
+            rs = avg_gain / avg_loss
+            rsi = 100 - (100 / (1 + rs))
+            return rsi.fillna(0)
         
         df['RSI_14'] = calculate_rsi(df['close'])
         

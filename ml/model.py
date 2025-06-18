@@ -271,13 +271,14 @@ class StockLSTMTrainer:
             betas=(0.9, 0.999)
         )
     
-    def configure_scheduler(self, optimizer: torch.optim.Optimizer, 
-                          num_epochs: int) -> torch.optim.lr_scheduler._LRScheduler:
+    def configure_scheduler(self, optimizer: torch.optim.Optimizer, num_epochs: int, steps_per_epoch) -> torch.optim.lr_scheduler._LRScheduler:
         """Configure learning rate scheduler"""
+        
         return torch.optim.lr_scheduler.OneCycleLR(
             optimizer,
             max_lr=1e-3,
             epochs=num_epochs,
+            steps_per_epoch=steps_per_epoch,
             pct_start=0.1,
             anneal_strategy='cos'
         )

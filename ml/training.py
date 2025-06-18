@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from dataloader import DatasetConfig, create_stock_datasets, create_data_loaders
-from model import create_stock_lstm, StockLSTMTrainer
+from .dataloader import DatasetConfig, create_stock_datasets, create_data_loaders
+from .model import create_stock_lstm, StockLSTMTrainer
 import logging
 import pandas as pd
 
@@ -75,13 +75,15 @@ def train_stock_model(csv_path="temp.csv",
         trainer = StockLSTMTrainer(model, model.config)
         optimizer = trainer.configure_optimizer(learning_rate)
     
-    scheduler = trainer.configure_scheduler(optimizer, epochs)
+    scheduler = trainer.configure_scheduler(optimizer, epochs, steps_per_epoch=len(train_loader))
     criterion = nn.BCELoss()  # Binary classification loss
     
     logger.info(f"Starting training for {epochs} epochs...")
     model.train()
     
     best_val_loss = float('inf')
+    patience = 5
+    epochs_no_improve = 0
     
     for epoch in range(epochs):
         train_loss = 0.0
@@ -136,6 +138,7 @@ def train_stock_model(csv_path="temp.csv",
         
         if val_loss < best_val_loss:
             best_val_loss = val_loss
+            epochs_no_improve = 0  
             torch.save({
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
@@ -145,7 +148,11 @@ def train_stock_model(csv_path="temp.csv",
                 'feature_names': train_ds.feature_names,
                 'scaler': train_ds.get_scaler()
             }, model_save_path)
-    
+        else:
+            epochs_no_improve += 1
+            if epochs_no_improve >= patience:
+                logger.info(f"Early stopping at epoch {epoch} (no val loss improvement in {patience} epochs)")
+                break
     logger.info(f"Training completed! Best model saved to {model_save_path}")
     return model
 
@@ -222,7 +229,7 @@ def load_trained_model(model_path="stock_model.pth"):
     Returns:
         Loaded model and associated data
     """
-    checkpoint = torch.load(model_path, map_location='cpu')
+    checkpoint = torch.load(model_path, weights_only=False, map_location='cpu')
     
     model = create_stock_lstm(
         input_size=checkpoint['config'].input_size,
@@ -239,7 +246,7 @@ def load_trained_model(model_path="stock_model.pth"):
         'config': checkpoint['config']
     }
 
-def predict_next_day(csv_path="temp.csv", model_path="stock_model.pth"):
+def predict_next_day(csv_path="temp.csv", model_path="stock_model.pth", minutes_ahead=10):
     """
     Make prediction for next day using trained model
     
@@ -254,7 +261,7 @@ def predict_next_day(csv_path="temp.csv", model_path="stock_model.pth"):
     model = model_data['model']
     scaler = model_data['scaler']
     
-    config = DatasetConfig(window_size=60, horizon=1, target_type="classification")
+    config = DatasetConfig(window_size=60, horizon=minutes_ahead, target_type="classification")
     train_ds, _, _ = create_stock_datasets(csv_path, config)
     
     last_sequence = train_ds.X[-1].unsqueeze(0)  # Add batch dimension

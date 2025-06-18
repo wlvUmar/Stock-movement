@@ -23,10 +23,8 @@ TRAINING_CONFIG = {
 async def run_pipeline():
     try:
         pipeline = StockMovementPipeline()
-        await pipeline.run_pipeline()
-        
-        # After pipeline completes, run training
-        await run_training()
+        await pipeline.run_pipeline()        
+        # await run_training()
     except Exception as e:
         logger.error(f"Pipeline execution failed: {e}")
 

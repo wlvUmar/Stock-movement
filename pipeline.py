@@ -307,9 +307,12 @@ class StockMovementPipeline:
             raise
     
     async def run_pipeline(self, start_date: Optional[str] = None, 
-                          max_requests: int = 40) -> None:
+                           max_requests: int = 40) -> None:
         """Run the complete ETL pipeline"""
         try:
+            if start_date is None:
+                start_date = (await self.get_latest_date()).strftime("%Y-%m-%d")
+            
             await self.extract(start_date, max_requests)
             self.transform()
             await self.load()
@@ -318,7 +321,6 @@ class StockMovementPipeline:
         except Exception as e:
             self.logger.error(f"Pipeline failed: {e}")
             raise
-
 
 async def main():
     pipeline = StockMovementPipeline(symbol="AAPL", batch_size=1000)

@@ -11,4 +11,6 @@ class Settings(BaseSettings):
     PG_TEST_URL: str = "postgresql+asyncpg://postgres:getout04@localhost:5433/postgres_test"
     ROOT_DIR : str = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
     API_KEY: str = "0de885b71f8146e99ab2ca388d3ee622"
+    MODEL_PATH: str = ROOT_DIR + "/stock_model.pth"
+    USE_GPU : bool = False
 settings = Settings()   
