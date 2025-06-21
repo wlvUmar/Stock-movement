@@ -3,3 +3,4 @@ TECHNICAL_REPORT.md
 temp.csv
 test.py
 stock_model.pth
+/logs

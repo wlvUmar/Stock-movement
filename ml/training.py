@@ -1,10 +1,15 @@
+import logging
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from .dataloader import DatasetConfig, create_stock_datasets, create_data_loaders
-from .model import create_stock_lstm, StockLSTMTrainer
-import logging
 import pandas as pd
+
+from .dataloader import create_stock_datasets, create_data_loaders
+from .model import create_stock_lstm, StockLSTMTrainer
+from utils import DatasetConfig
+from logger_setup import setup_logging
+
+setup_logging("logs/ml.log")
 
 def train_stock_model(csv_path="temp.csv", 
                      epochs=50, 
@@ -29,7 +34,6 @@ def train_stock_model(csv_path="temp.csv",
         Trained model
     """
     
-    logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
     
     config = DatasetConfig(

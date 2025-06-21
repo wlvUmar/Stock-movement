@@ -4,25 +4,9 @@ import torch.nn.functional as F
 from torch.nn.utils import clip_grad_norm_
 import math
 from typing import Optional, Tuple, Dict, Any
-from dataclasses import dataclass
 
+from utils import ModelConfig
 
-@dataclass
-class ModelConfig:
-    """Configuration for the LSTM model"""
-    input_size: int = 12
-    hidden_size: int = 128
-    num_layers: int = 3
-    dropout: float = 0.3
-    bidirectional: bool = True
-    use_attention: bool = True
-    use_residual: bool = True
-    use_layer_norm: bool = True
-    output_size: int = 1
-    task_type: str = "classification"  # "classification", "regression", "multi_class"
-    num_classes: int = 2  # for multi-class classification
-    gradient_clip: float = 1.0
-    weight_decay: float = 1e-4
 
 
 class MultiHeadAttention(nn.Module):
