@@ -8,10 +8,7 @@ from typing import Optional, Tuple, Dict, Any
 from utils import ModelConfig
 
 
-
 class MultiHeadAttention(nn.Module):
-    """Multi-head attention mechanism for sequence modeling"""
-    
     def __init__(self, hidden_size: int, num_heads: int = 8, dropout: float = 0.1):
         super().__init__()
         assert hidden_size % num_heads == 0
@@ -29,12 +26,10 @@ class MultiHeadAttention(nn.Module):
     def forward(self, x: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
         batch_size, seq_len, _ = x.size()
         
-        # Linear projections
         Q = self.query(x).view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
         K = self.key(x).view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
         V = self.value(x).view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)  
         
-        # Scaled dot-product attention
         scores = torch.matmul(Q, K.transpose(-2, -1)) / math.sqrt(self.head_dim)
         
         if mask is not None:
@@ -42,11 +37,7 @@ class MultiHeadAttention(nn.Module):
         
         attention_weights = F.softmax(scores, dim=-1)
         attention_weights = self.dropout(attention_weights)
-        
-        # Apply attention to values
-        context = torch.matmul(attention_weights, V)
-        
-        # Concatenate heads and put through final linear layer
+        context = torch.matmul(attention_weights, V)        
         context = context.transpose(1, 2).contiguous().view(
             batch_size, seq_len, self.hidden_size
         )
@@ -55,9 +46,7 @@ class MultiHeadAttention(nn.Module):
         return output
 
 
-class ResidualBlock(nn.Module):
-    """Residual block with layer norm"""
-    
+class ResidualBlock(nn.Module):    
     def __init__(self, hidden_size: int, dropout: float = 0.1):
         super().__init__()
         self.layer_norm = nn.LayerNorm(hidden_size)
@@ -67,10 +56,7 @@ class ResidualBlock(nn.Module):
         return x + self.dropout(self.layer_norm(sublayer_output))
 
 
-
-class AdvancedStockLSTM(nn.Module):
-    """Advanced LSTM model for stock movement prediction with modern architecture"""
-    
+class AdvancedStockLSTM(nn.Module):    
     def __init__(self, config: ModelConfig):
         super().__init__()
         self.config = config
@@ -117,37 +103,31 @@ class AdvancedStockLSTM(nn.Module):
         
 
     def _build_output_layers(self) -> nn.Module:
-        """Build output layers based on task type"""
         layers = []
         
-        # Common layers
         layers.extend([
             nn.Linear(self.config.hidden_size, self.config.hidden_size // 2),
             nn.GELU(),
             nn.Dropout(self.config.dropout),
             nn.Linear(self.config.hidden_size // 2, self.config.hidden_size // 4),
             nn.GELU(),
-            nn.Dropout(self.config.dropout)
-        ])
+            nn.Dropout(self.config.dropout)])
         
-        # Task-specific output layer
         if self.config.task_type == "classification":
             layers.extend([
                 nn.Linear(self.config.hidden_size // 4, 1),
-                nn.Sigmoid()
-            ])
+                nn.Sigmoid()])
+
         elif self.config.task_type == "multi_class":
             layers.extend([
                 nn.Linear(self.config.hidden_size // 4, self.config.num_classes),
-                nn.Softmax(dim=1)
-            ])
-        else:  # regression
+                nn.Softmax(dim=1)])
+        else: 
             layers.append(nn.Linear(self.config.hidden_size // 4, self.config.output_size))
             
         return nn.Sequential(*layers)
     
     def _init_weights(self):
-        """Initialize model weights"""
         for name, param in self.named_parameters():
             if 'weight' in name:
                 if len(param.shape) >= 2:
@@ -158,25 +138,13 @@ class AdvancedStockLSTM(nn.Module):
                 nn.init.constant_(param, 0)
     
     def forward(self, x: torch.Tensor, mask: Optional[torch.Tensor] = None) -> Dict[str, torch.Tensor]:
-        """
-        Forward pass
-        
-        Args:
-            x: Input tensor [batch_size, seq_len, input_size]
-            mask: Optional attention mask
-            
-        Returns:
-            Dictionary containing outputs and intermediate results
-        """
         batch_size, seq_len, _ = x.size()
         x = self.input_projection(x)
-
-        # LSTM processing
         lstm_out, (hidden, cell) = self.lstm(x)
         
         if self.config.use_attention:
             attended = self.attention(lstm_out, mask)
-            
+
             if self.config.use_residual:
                 lstm_out = self.residual_blocks[0](lstm_out, attended)
             else:
@@ -190,15 +158,11 @@ class AdvancedStockLSTM(nn.Module):
         if self.config.use_residual and len(self.residual_blocks) > 1:
             features = self.residual_blocks[1](lstm_out, features)
         
-        # Global average pooling or use last time step
         if self.config.use_attention:
-            # Weighted average based on attention
             pooled = torch.mean(features, dim=1)
         else:
-            # Use last time step
             pooled = features[:, -1, :]
         
-        # Output prediction
         output = self.output_layers(pooled)
         
         return {
@@ -210,7 +174,6 @@ class AdvancedStockLSTM(nn.Module):
         }
     
     def predict_proba(self, x: torch.Tensor) -> torch.Tensor:
-        """Get prediction probabilities"""
         self.eval()
         with torch.no_grad():
             result = self.forward(x)
@@ -223,7 +186,6 @@ class AdvancedStockLSTM(nn.Module):
                 return result['output']
     
     def get_attention_weights(self, x: torch.Tensor) -> Optional[torch.Tensor]:
-        """Extract attention weights for interpretability"""
         if not self.config.use_attention:
             return None
             
@@ -232,22 +194,15 @@ class AdvancedStockLSTM(nn.Module):
             x = self.input_projection(x)
             x = self.pos_encoding(x)
             lstm_out, _ = self.lstm(x)
-            
-            # Get attention weights (would need to modify attention module)
-            # This is a placeholder - actual implementation would require
-            # modifying the attention module to return weights
             return None
 
 
-class StockLSTMTrainer:
-    """Training utilities for the stock LSTM model"""
-    
+class StockLSTMTrainer:    
     def __init__(self, model: AdvancedStockLSTM, config: ModelConfig):
         self.model = model
         self.config = config
         
     def configure_optimizer(self, learning_rate: float = 1e-3) -> torch.optim.Optimizer:
-        """Configure optimizer with weight decay"""
         return torch.optim.AdamW(
             self.model.parameters(),
             lr=learning_rate,
@@ -256,8 +211,6 @@ class StockLSTMTrainer:
         )
     
     def configure_scheduler(self, optimizer: torch.optim.Optimizer, num_epochs: int, steps_per_epoch) -> torch.optim.lr_scheduler._LRScheduler:
-        """Configure learning rate scheduler"""
-        
         return torch.optim.lr_scheduler.OneCycleLR(
             optimizer,
             max_lr=1e-3,
@@ -269,26 +222,19 @@ class StockLSTMTrainer:
     
     def training_step(self, batch: Tuple[torch.Tensor, torch.Tensor], 
                      criterion: nn.Module) -> Dict[str, float]:
-        """Single training step with gradient clipping"""
-        x, y = batch
-        
-        # Forward pass
+        x, y = batch        
         outputs = self.model(x)
         predictions = outputs['output']
         
-        # Calculate loss
         if self.config.task_type == "multi_class":
             loss = criterion(predictions, y.long())
         else:
             loss = criterion(predictions, y.float())
-        
-        # Backward pass with gradient clipping
         loss.backward()
         
         if self.config.gradient_clip > 0:
             clip_grad_norm_(self.model.parameters(), self.config.gradient_clip)
         
-        # Calculate metrics
         metrics = {'loss': loss.item()}
         
         if self.config.task_type in ["classification", "multi_class"]:
@@ -304,9 +250,7 @@ class StockLSTMTrainer:
         return metrics
 
 
-def create_stock_lstm(input_size: int, 
-                     task_type: str = "classification",
-                     model_size: str = "medium") -> AdvancedStockLSTM:
+def create_stock_lstm(input_size: int, task_type: str = "classification",model_size: str = "medium") -> AdvancedStockLSTM:
     """
     Factory function to create stock LSTM models
     

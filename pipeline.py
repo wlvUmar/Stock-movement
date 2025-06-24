@@ -24,7 +24,6 @@ class MarketHours:
     open_time: dt_time = dt_time(9, 30)
     close_time: dt_time = dt_time(16, 0)
 
-        
 
 class RateLimiter:
     def __init__(self, calls_per_minute: int= 5):
@@ -60,8 +59,7 @@ class StockMovementPipeline:
         market_close = datetime.combine(date.date(), self.market_hours.close_time)
         return market_open, market_close
     
-    async def get_stock_data_async(self, start_date: str, end_date: str, 
-                                  retries: int = 3) -> pd.DataFrame:
+    async def get_stock_data_async(self, start_date: str, end_date: str, retries: int = 3) -> pd.DataFrame:
         params = {"start": start_date, "end": end_date}
         
         for attempt in range(retries):
@@ -115,8 +113,7 @@ class StockMovementPipeline:
         df = df.drop_duplicates(subset=["date"], keep="last")
         return df
     
-    def generate_time_chunks(self, start_date: str, 
-                           chunk_minutes: int = 60) -> Generator[tuple[str, str], None, None]:
+    def generate_time_chunks(self, start_date: str, chunk_minutes: int = 60) -> Generator[tuple[str, str], None, None]:
         """Generate time chunks for data fetching"""
         
         current_date = datetime.strptime(start_date, "%Y-%m-%d")
@@ -268,7 +265,6 @@ class StockMovementPipeline:
         except Exception as e:
             self.logger.error(f"Transformation error: {e}")
             raise
-    
     
     async def load(self) -> None:
         try:

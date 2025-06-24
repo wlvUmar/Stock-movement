@@ -11,13 +11,7 @@ from logger_setup import setup_logging
 
 setup_logging("logs/ml.log")
 
-def train_stock_model(csv_path="temp.csv", 
-                     epochs=50, 
-                     batch_size=32, 
-                     learning_rate=1e-3,
-                     model_save_path="stock_model.pth",
-                     incremental=False,
-                     existing_model_path=None):
+def train_stock_model(csv_path="temp.csv",  epochs=50,  batch_size=32,  learning_rate=1e-3, model_save_path="stock_model.pth", incremental=False, existing_model_path=None):
     """
     Train stock prediction model (full retraining or incremental)
     
@@ -73,14 +67,14 @@ def train_stock_model(csv_path="temp.csv",
         model = create_stock_lstm(
             input_size=input_size,
             task_type="classification",
-            model_size="medium"  # You can change to "small" or "large"
+            model_size="medium"
         )
         
         trainer = StockLSTMTrainer(model, model.config)
         optimizer = trainer.configure_optimizer(learning_rate)
     
     scheduler = trainer.configure_scheduler(optimizer, epochs, steps_per_epoch=len(train_loader))
-    criterion = nn.BCELoss()  # Binary classification loss
+    criterion = nn.BCELoss() 
     
     logger.info(f"Starting training for {epochs} epochs...")
     model.train()
@@ -160,10 +154,7 @@ def train_stock_model(csv_path="temp.csv",
     logger.info(f"Training completed! Best model saved to {model_save_path}")
     return model
 
-def incremental_train(csv_path="temp.csv", 
-                     model_path="stock_model.pth",
-                     epochs=10,
-                     learning_rate=5e-4):
+def incremental_train(csv_path="temp.csv",  model_path="stock_model.pth", epochs=10, learning_rate=5e-4):
     """
     Incremental training - continues training existing model with new data
     
@@ -185,10 +176,7 @@ def incremental_train(csv_path="temp.csv",
         existing_model_path=model_path
     )
 
-def train_on_new_data_only(csv_path="temp.csv",
-                          model_path="stock_model.pth", 
-                          days_back=30,
-                          epochs=5):
+def train_on_new_data_only(csv_path="temp.csv",model_path="stock_model.pth", days_back=30,epochs=5):
     """
     Train only on recent data for quick daily updates
     

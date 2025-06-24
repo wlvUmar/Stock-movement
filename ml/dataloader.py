@@ -11,8 +11,6 @@ import logging
 from utils import DatasetConfig, TechnicalIndicators
 
 class StockDataset(Dataset):
-    """Improved stock dataset with proper ML practices"""
-    
     def __init__(self, 
                  data: Union[str, pd.DataFrame], 
                  config: DatasetConfig,
@@ -42,7 +40,6 @@ class StockDataset(Dataset):
         feature_columns = self._select_features(df)
         self.feature_names = feature_columns
         
-        # Prepare features and targets
         features = df[feature_columns].values.astype(np.float32)
         targets = self._create_targets(df)
 
@@ -54,14 +51,11 @@ class StockDataset(Dataset):
         if self.scaler is not None:
             features = self.scaler.transform(features)
         
-        # Create sequences
         self.X, self.y = self._create_sequences(features, targets)
         
         self.logger.info(f"Created {mode} dataset with {len(self.X)} samples")
     
     def _handle_missing_values(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Handle missing values intelligently"""
-
         df = df.fillna(method='ffill').fillna(method='bfill')
         initial_len = len(df)
         df = df.dropna()
@@ -72,7 +66,6 @@ class StockDataset(Dataset):
         return df.reset_index(drop=True)
     
     def _select_features(self, df: pd.DataFrame) -> List[str]:
-        """Select features for training"""
         if self.config.features:
             return self.config.features
         
@@ -93,22 +86,18 @@ class StockDataset(Dataset):
         return available_features
     
     def _create_targets(self, df: pd.DataFrame) -> np.ndarray:
-        """Create target variables"""
         if self.config.target_type == "classification":
-            # Binary classification: price goes up or down
             future_prices = df['close'].shift(-self.config.horizon)
             current_prices = df['close']
             targets = (future_prices > current_prices).astype(int)
         else:
-            # Regression: predict future returns
             future_prices = df['close'].shift(-self.config.horizon)
             current_prices = df['close']
             targets = (future_prices - current_prices) / current_prices
-        
+        self.logger.debug(targets)
         return targets.values
     
     def _fit_scaler(self, features: np.ndarray) -> object:
-        """Fit scaler to training data"""
         if self.config.scaling_method == "standard":
             scaler = StandardScaler()
         elif self.config.scaling_method == "robust":
@@ -122,18 +111,15 @@ class StockDataset(Dataset):
         return scaler.fit(features)
     
     def _create_sequences(self, features: np.ndarray, targets: np.ndarray) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Create sequences for time series prediction"""
         X, y = [], []
         
-        # Ensure we have enough data
         max_idx = len(features) - self.config.window_size - self.config.horizon
         
         for i in range(max_idx):
-            # Input sequence
             sequence = features[i:i + self.config.window_size]
             target = targets[i + self.config.window_size + self.config.horizon - 1]
             
-            if not np.isnan(target):  # Skip NaN targets
+            if not np.isnan(target):  
                 X.append(sequence)
                 y.append(target)
         
@@ -154,14 +140,10 @@ class StockDataset(Dataset):
         return self.X[idx], self.y[idx]
     
     def get_scaler(self):
-        """Return the fitted scaler"""
         return self.scaler
 
 
-def create_stock_datasets(csv_path: str, 
-                         config: DatasetConfig) -> Tuple[StockDataset, StockDataset, StockDataset]:
-    """Create train, validation, and test datasets with proper data splitting"""
-    
+def create_stock_datasets(csv_path: str, config: DatasetConfig) -> Tuple[StockDataset, StockDataset, StockDataset]:
     df = pd.read_csv(csv_path, parse_dates=["date"])
     df = df.sort_values("date").reset_index(drop=True)
     
@@ -181,11 +163,7 @@ def create_stock_datasets(csv_path: str,
     return train_dataset, val_dataset, test_dataset
 
 
-def create_data_loaders(train_dataset: StockDataset, 
-                       val_dataset: StockDataset, 
-                       test_dataset: StockDataset,
-                       batch_size: int = 32,
-                       num_workers: int = 4) -> Tuple[DataLoader, DataLoader, DataLoader]:
+def create_data_loaders(train_dataset: StockDataset, val_dataset: StockDataset, test_dataset: StockDataset,batch_size: int = 32,num_workers: int = 4) -> Tuple[DataLoader, DataLoader, DataLoader]:
     """Create data loaders for training"""
     
     train_loader = DataLoader(
